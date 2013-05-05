@@ -11,12 +11,10 @@ if HOME_DIR == nil
   exit 2
 end
 
-MUL_SSH_KEYS_DIR = "#{HOME_DIR}/.skm"
-KEYS_DIR = "#{MUL_SSH_KEYS_DIR}/keys"
 DOT_SSH_DIR = "#{HOME_DIR}/.ssh"
 
 # create command
-def cmd_create(argv)
+def cmd_create(argv, keys_dir)
   # create a new ssh key under ~/.mul-ssh-keys/key-name directory
 
   opts = Trollop::options do
@@ -41,7 +39,7 @@ def cmd_create(argv)
   name = argv[0]
 
   # generate the new key
-  new_key_dir = "#{KEYS_DIR}/#{name}"
+  new_key_dir = "#{keys_dir}/#{name}"
   FileUtils.mkdir_p new_key_dir
   cmd_str = "ssh-keygen -t #{opts[:type].downcase} -f #{new_key_dir}/id_#{opts[:type].downcase}"
   cmd_str += " -C #{opts[:comment]}" if opts[:comment] != nil
@@ -53,7 +51,7 @@ def cmd_create(argv)
 end
 
 # use command
-def cmd_use(argv)
+def cmd_use(argv, keys_dir)
   Trollop::options do
     banner <<-EOS
   Ssh Key Manager
@@ -68,7 +66,7 @@ def cmd_use(argv)
 
   name = argv[0]
 
-  key_dir = "#{KEYS_DIR}/#{name}"
+  key_dir = "#{keys_dir}/#{name}"
 
   # check for existence of the key
   unless File.exists? "#{key_dir}/id_rsa" or File.exists? "#{key_dir}/id_dsa"
@@ -87,7 +85,7 @@ def cmd_use(argv)
 end
 
 # list command
-def cmd_list(argv)
+def cmd_list(argv, keys_dir)
   Trollop::options do
     banner <<-EOS
   Ssh Key Manager
@@ -97,9 +95,9 @@ def cmd_list(argv)
   Args:
     EOS
   end
-  Dir.foreach(KEYS_DIR) do |f|
-    puts f if File.directory?("#{KEYS_DIR}/#{f}") and f != '.' and f != '..' and
-        (File.exists? "#{KEYS_DIR}/#{f}/id_rsa" or File.exists? "#{KEYS_DIR}/#{f}/id_dsa")
+  Dir.foreach(keys_dir) do |f|
+    puts f if File.directory?("#{keys_dir}/#{f}") and f != '.' and f != '..' and
+        (File.exists? "#{keys_dir}/#{f}/id_rsa" or File.exists? "#{keys_dir}/#{f}/id_dsa")
   end
 end
 
@@ -123,20 +121,26 @@ global_opts = Trollop::options do
   Global args:
   EOS
 
+  opt :skm_dir, 'Directory of skm files.', :short => '-s', :default => "#{HOME_DIR}/.skm"
+
   stop_on SUB_COMMANDS
 end
 
 Trollop::die 'Use "skm --help" or "skm [command] --help" for help' if ARGV.empty? or ARGV[0] == 'help'
 
+# directory of skm
+skm_dir = global_opts[:skm_dir]
+keys_dir = "#{skm_dir}/keys"
+
 cmd = ARGV.shift # get the subcommand
 
 case cmd
 when 'create'
-  cmd_create(ARGV)
+  cmd_create(ARGV, keys_dir)
 when 'use'
-  cmd_use(ARGV)
+  cmd_use(ARGV, keys_dir)
 when 'list'
-  cmd_list(ARGV)
+  cmd_list(ARGV, keys_dir)
 else
 end
 
