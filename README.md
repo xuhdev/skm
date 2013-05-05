@@ -38,6 +38,10 @@ After done some work, we could then switch to `key2`:
 
 Use `skm --help` and `skm [command] --help` to read more.
 
+## Where are my keys?
+
+By default, all your keys are put in `~/.skm`. But you can use other
+directories by using `--skm-dir` option on command line.
 
 
 [RubyGems]: https://rubygems.org/gems/skm
