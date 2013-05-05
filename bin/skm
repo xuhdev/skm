@@ -30,6 +30,8 @@ def cmd_create(argv)
     EOS
 
     opt :comment, 'Comment of the new key. Could be your email address.', :short => '-C', :type => :string
+    opt :password, 'Ask for password of the newly generated key. Default is on. Use --no-password to avoid asking.',
+      :short => '-p', :defualt => true
     opt :type, 'Type of ssh key, rsa or dsa.', :short => '-t', :default => 'rsa'
   end
 
@@ -43,6 +45,7 @@ def cmd_create(argv)
   FileUtils.mkdir_p new_key_dir
   cmd_str = "ssh-keygen -t #{opts[:type].downcase} -f #{new_key_dir}/id_#{opts[:type].downcase}"
   cmd_str += " -C #{opts[:comment]}" if opts[:comment] != nil
+  cmd_str += ' -N ""' unless opts[:password]
 
   unless system cmd_str
     exit 4
