@@ -1,0 +1,140 @@
+#!/usr/bin/env ruby
+
+require 'fileutils'
+require 'trollop'
+require 'skm/version'
+
+HOME_DIR = ENV['HOME'].chomp '/'
+
+if HOME_DIR == nil
+  puts '$HOME variable can not be obtained.'
+  exit 2
+end
+
+MUL_SSH_KEYS_DIR = "#{HOME_DIR}/.skm"
+KEYS_DIR = "#{MUL_SSH_KEYS_DIR}/keys"
+DOT_SSH_DIR = "#{HOME_DIR}/.ssh"
+
+# create command
+def cmd_create(argv)
+  # create a new ssh key under ~/.mul-ssh-keys/key-name directory
+
+  opts = Trollop::options do
+
+    banner <<-EOS
+  Ssh Key Manager
+
+  skm create new-key-name [args]
+
+  Args:
+    EOS
+
+    opt :comment, 'Comment of the new key. Could be your email address.', :short => '-C', :type => :string
+    opt :type, 'Type of ssh key, rsa or dsa.', :short => '-t', :default => 'rsa'
+  end
+
+  Trollop::die :type, 'Unrecognized type.' unless ['rsa', 'dsa'].include? opts[:type]
+  Trollop::die "Too few arguments for 'create' command." if argv.length == 0
+
+  name = argv[0]
+
+  # generate the new key
+  new_key_dir = "#{KEYS_DIR}/#{name}"
+  FileUtils.mkdir_p new_key_dir
+  cmd_str = "ssh-keygen -t #{opts[:type].downcase} -f #{new_key_dir}/id_#{opts[:type].downcase}"
+  cmd_str += " -C #{opts[:comment]}" if opts[:comment] != nil
+
+  unless system cmd_str
+    exit 4
+  end
+end
+
+# use command
+def cmd_use(argv)
+  Trollop::options do
+    banner <<-EOS
+  Ssh Key Manager
+
+  skm use key-name
+
+  Args:
+    EOS
+  end
+
+  Trollop::die "Too few arguments for 'use' command." if argv.empty?
+
+  name = argv[0]
+
+  key_dir = "#{KEYS_DIR}/#{name}"
+
+  # check for existence of the key
+  unless File.exists? "#{key_dir}/id_rsa" or File.exists? "#{key_dir}/id_dsa"
+    puts "Key #{name} doesn't exist."
+    exit 3
+  end
+
+  FileUtils.mkdir_p DOT_SSH_DIR
+
+  # backup current keys and copy the key we are about to use
+  ['id_rsa', 'id_rsa.pub', 'id_dsa', 'id_dsa.pub'].each do |f|
+    FileUtils.mv "#{DOT_SSH_DIR}/#{f}", "#{DOT_SSH_DIR}/#{f}.bak", :force => true if File.exists? "#{DOT_SSH_DIR}/#{f}"
+    FileUtils.cp "#{key_dir}/#{f}", DOT_SSH_DIR if File.exists? "#{key_dir}/#{f}"
+  end
+
+end
+
+# list command
+def cmd_list(argv)
+  Trollop::options do
+    banner <<-EOS
+  Ssh Key Manager
+
+  skm list key-name
+
+  Args:
+    EOS
+  end
+  Dir.foreach(KEYS_DIR) do |f|
+    puts f if File.directory?("#{KEYS_DIR}/#{f}") and f != '.' and f != '..' and
+        (File.exists? "#{KEYS_DIR}/#{f}/id_rsa" or File.exists? "#{KEYS_DIR}/#{f}/id_dsa")
+  end
+end
+
+SUB_COMMANDS = %w(create list use)
+global_opts = Trollop::options do
+  version "#{SshKeyManager::VERSION::STRING} (C) 2013 Hong Xu"
+
+  banner <<-EOS
+  Ssh Key Manager
+
+  skm [command] [args]
+
+  Available commands:
+
+  create            Create a new ssh key
+  list              List ssh keys
+  use               Switch ssh keys
+
+  Use skm [command] --help for the help of the command.
+
+  Global args:
+  EOS
+
+  stop_on SUB_COMMANDS
+end
+
+Trollop::die 'Use "skm --help" or "skm [command] --help" for help' if ARGV.empty? or ARGV[0] == 'help'
+
+cmd = ARGV.shift # get the subcommand
+
+case cmd
+when 'create'
+  cmd_create(ARGV)
+when 'use'
+  cmd_use(ARGV)
+when 'list'
+  cmd_list(ARGV)
+else
+end
+
+

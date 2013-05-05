@@ -1,0 +1,14 @@
+
+root = true
+
+[/bin/skm]
+end_of_line = lf
+indent_size = 2
+indent_style = space
+charset = UTF-8
+
+[*.rb]
+end_of_line = lf
+indent_size = 2
+indent_style = space
+charset = UTF-8
