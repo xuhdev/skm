@@ -4,6 +4,10 @@ Skm is a tool to manage your multiple ssh keys.
 
 [RubyGems][] | [![Build Status](https://secure.travis-ci.org/xuhdev/skm.png?branch=master)](http://travis-ci.org/xuhdev/skm)
 
+## Installation
+
+    gem install skm
+
 ## Usage
 
 Create a new key:
