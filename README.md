@@ -2,6 +2,7 @@
 
 Skm is a tool to manage your multiple ssh keys.
 
+[RubyGems][] | [![Build Status](https://secure.travis-ci.org/xuhdev/skm.png?branch=master)](http://travis-ci.org/xuhdev/skm)
 
 ## Usage
 
@@ -37,3 +38,6 @@ After done some work, we could then switch to `key2`:
 
 Use `skm --help` and `skm [command] --help` to read more.
 
+
+
+[RubyGems]: https://rubygems.org/gems/skm
