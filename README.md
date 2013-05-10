@@ -22,6 +22,8 @@ Switch to another key:
 
     skm use key_name
 
+NOTE: ssh-agent may need to be disabled for this new key to be valid!
+
 List all keys:
 
     skm list
