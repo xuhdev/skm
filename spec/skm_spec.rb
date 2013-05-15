@@ -69,6 +69,18 @@ describe 'skm' do
       lines.length.should == 2
     end
   end
+
+  describe '#Show command' do
+    it 'should show the public key' do
+      FileUtils.rm_rf KEYS_DIR  # remove all keys first
+      system "#{cmd_prefix} create test_show1 --no-password"
+      system "#{cmd_prefix} create test_show2 --no-password --type dsa"
+
+      system("#{cmd_prefix} show test_show1").should == true
+      system("#{cmd_prefix} show test_show2").should == true
+      system("#{cmd_prefix} show non_existence").should == false
+    end
+  end
 end
 
 # vim: ts=2 sw=2 et

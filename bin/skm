@@ -13,9 +13,25 @@ end
 
 DOT_SSH_DIR = "#{HOME_DIR}/.ssh"
 
+# check the existance of a key
+# @pub: also check public key?
+def does_key_exist?(keys_dir, name, pub)
+  does_rsa_key_exist?(keys_dir, name, pub) || does_dsa_key_exist?(keys_dir, name, pub)
+end
+
+def does_rsa_key_exist?(keys_dir, name, pub)
+  key_dir = "#{keys_dir}/#{name}"
+  File.exists?("#{key_dir}/id_rsa") && (!pub || File.exists?("#{key_dir}/id_rsa.pub"))
+end
+
+def does_dsa_key_exist?(keys_dir, name, pub)
+  key_dir = "#{keys_dir}/#{name}"
+  File.exists?("#{key_dir}/id_dsa") && (!pub || File.exists?("#{key_dir}/id_dsa.pub"))
+end
+
 # create command
 def cmd_create(argv, keys_dir)
-  # create a new ssh key under ~/.mul-ssh-keys/key-name directory
+  # create a new ssh key under ~/.skm/key-name directory
 
   opts = Trollop::options do
 
@@ -69,7 +85,7 @@ def cmd_use(argv, keys_dir)
   key_dir = "#{keys_dir}/#{name}"
 
   # check for existence of the key
-  unless File.exists? "#{key_dir}/id_rsa" or File.exists? "#{key_dir}/id_dsa"
+  unless does_key_exist?(keys_dir, name, false)
     puts "Key #{name} doesn't exist."
     exit 3
   end
@@ -101,6 +117,39 @@ def cmd_list(argv, keys_dir)
   end
 end
 
+# show command
+def cmd_show(argv, keys_dir)
+  Trollop::options do
+    banner <<-EOS
+  Ssh Key Manager
+
+  skm show key-name
+
+  Args:
+    EOS
+  end
+
+  Trollop::die "Too few arguments for 'show' command." if argv.empty?
+
+  name = argv[0]
+
+  # get the pub file
+  pub_file = ''
+  if does_rsa_key_exist?(keys_dir, name, true)
+    pub_file = "id_rsa.pub"
+  elsif does_dsa_key_exist?(keys_dir, name, true)
+    pub_file = "id_dsa.pub"
+  else
+    puts "Key #{name} doesn't exist."
+    exit 4
+  end
+
+  File.open("#{keys_dir}/#{name}/#{pub_file}", 'r').each_line do |line|
+    puts line
+  end
+end
+
+
 SUB_COMMANDS = %w(create list use)
 global_opts = Trollop::options do
   version "#{SshKeyManager::VERSION::STRING} (C) 2013 Hong Xu"
@@ -114,6 +163,7 @@ global_opts = Trollop::options do
 
   create            Create a new ssh key
   list              List ssh keys
+  show              Show the public key
   use               Switch ssh keys
 
   Use skm [command] --help for the help of the command.
@@ -137,10 +187,12 @@ cmd = ARGV.shift # get the subcommand
 case cmd
 when 'create'
   cmd_create(ARGV, keys_dir)
-when 'use'
-  cmd_use(ARGV, keys_dir)
 when 'list'
   cmd_list(ARGV, keys_dir)
+when 'show'
+  cmd_show(ARGV, keys_dir)
+when 'use'
+  cmd_use(ARGV, keys_dir)
 else
 end
 
