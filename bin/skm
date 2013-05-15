@@ -194,6 +194,6 @@ when 'show'
 when 'use'
   cmd_use(ARGV, keys_dir)
 else
+  Trollop::die 'Use "skm --help" or "skm [command] --help" for help'
 end
-
 

@@ -81,6 +81,12 @@ describe 'skm' do
       system("#{cmd_prefix} show non_existence").should == false
     end
   end
+
+  describe '#Non-existing command' do
+    it 'should be unsuccessful' do
+      system("#{cmd_prefix} I_am_a_non_existing_command").should == false
+    end
+  end
 end
 
 # vim: ts=2 sw=2 et
