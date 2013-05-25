@@ -46,19 +46,35 @@ describe 'skm' do
 
   describe '#Use command' do
     it 'should copy keys to ~/.ssh directory' do
-      system "#{cmd_prefix} create test_use --no-password"
-      system "#{cmd_prefix} use test_use"
 
-      FileUtils.compare_file("#{SSH_DIR}/id_rsa", "#{KEYS_DIR}/test_use/id_rsa").should == true
-      FileUtils.compare_file("#{SSH_DIR}/id_rsa.pub", "#{KEYS_DIR}/test_use/id_rsa.pub").should == true
+      FileUtils.rm_rf "#{SSH_DIR}"    # test for the case SSH_DIR doesn't exist
+
+      system "#{cmd_prefix} create test_use0 --no-password"
+      system "#{cmd_prefix} create test_use1 --no-password"
+
+      system "#{cmd_prefix} use test_use0"
+      FileUtils.compare_file("#{SSH_DIR}/id_rsa", "#{KEYS_DIR}/test_use0/id_rsa").should == true
+      FileUtils.compare_file("#{SSH_DIR}/id_rsa.pub", "#{KEYS_DIR}/test_use0/id_rsa.pub").should == true
+
+      system "#{cmd_prefix} use test_use1"
+      FileUtils.compare_file("#{SSH_DIR}/id_rsa", "#{KEYS_DIR}/test_use1/id_rsa").should == true
+      FileUtils.compare_file("#{SSH_DIR}/id_rsa.pub", "#{KEYS_DIR}/test_use1/id_rsa.pub").should == true
     end
 
     it 'should do the same for dsa algorithm' do
-      system "#{cmd_prefix} create test_use_dsa --no-password --type dsa"
-      system "#{cmd_prefix} use test_use_dsa"
 
-      FileUtils.compare_file("#{SSH_DIR}/id_dsa", "#{KEYS_DIR}/test_use_dsa/id_dsa").should == true
-      FileUtils.compare_file("#{SSH_DIR}/id_dsa.pub", "#{KEYS_DIR}/test_use_dsa/id_dsa.pub").should == true
+      FileUtils.rm_rf "#{SSH_DIR}"    # test for the case SSH_DIR doesn't exist
+
+      system "#{cmd_prefix} create test_use_dsa0 --no-password --type dsa"
+      system "#{cmd_prefix} create test_use_dsa1 --no-password --type dsa"
+
+      system "#{cmd_prefix} use test_use_dsa0"
+      FileUtils.compare_file("#{SSH_DIR}/id_dsa", "#{KEYS_DIR}/test_use_dsa0/id_dsa").should == true
+      FileUtils.compare_file("#{SSH_DIR}/id_dsa.pub", "#{KEYS_DIR}/test_use_dsa0/id_dsa.pub").should == true
+
+      system "#{cmd_prefix} use test_use_dsa1"
+      FileUtils.compare_file("#{SSH_DIR}/id_dsa", "#{KEYS_DIR}/test_use_dsa1/id_dsa").should == true
+      FileUtils.compare_file("#{SSH_DIR}/id_dsa.pub", "#{KEYS_DIR}/test_use_dsa1/id_dsa.pub").should == true
     end
   end
 
