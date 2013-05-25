@@ -150,7 +150,7 @@ def cmd_show(argv, keys_dir)
 end
 
 
-SUB_COMMANDS = %w(create list use)
+SUB_COMMANDS = %w(create list show use)
 global_opts = Trollop::options do
   version "#{SshKeyManager::VERSION::STRING} (C) 2013 Hong Xu"
 
