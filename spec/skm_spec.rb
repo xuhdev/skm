@@ -15,12 +15,17 @@ cmd_prefix = "#{ruby} #{arguments} #{skm} --skm-dir '#{skm_dir}'"
 KEYS_DIR = "#{skm_dir}/keys"
 SSH_DIR = "#{ENV['HOME']}/.ssh"
 
-FileUtils.rm_rf skm_dir
-
 describe 'skm' do
+
+  before(:all) do
+    FileUtils.rm_rf skm_dir
+    FileUtils.mv SSH_DIR, "#{SSH_DIR}.bak" if File.exists? SSH_DIR
+  end
 
   after(:all) do
     FileUtils.rm_rf skm_dir  # remove the test dir
+    FileUtils.rm_rf SSH_DIR
+    FileUtils.mv "#{SSH_DIR}.bak", SSH_DIR if File.exists? "#{SSH_DIR}.bak"
   end
 
   describe '#Create command' do
@@ -60,12 +65,20 @@ describe 'skm' do
   describe '#List command' do
     it 'should list all existing keys' do
       FileUtils.rm_rf KEYS_DIR  # remove all keys first
+
       system "#{cmd_prefix} create test_list1 --no-password"
       system "#{cmd_prefix} create test_list2 --no-password --type dsa"
 
       lines = `#{cmd_prefix} list`.split(/\n/)
-      lines.include?('test_list1').should == true
-      lines.include?('test_list2').should == true
+      lines.include?('  test_list1').should == true
+      lines.include?('  test_list2').should == true
+      lines.length.should == 2
+
+      system "#{cmd_prefix} use test_list1"
+
+      lines = `#{cmd_prefix} list`.split(/\n/)
+      lines.include?('* test_list1').should == true
+      lines.include?('  test_list2').should == true
       lines.length.should == 2
     end
   end

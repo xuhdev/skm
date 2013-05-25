@@ -112,8 +112,22 @@ def cmd_list(argv, keys_dir)
     EOS
   end
   Dir.foreach(keys_dir) do |f|
-    puts f if File.directory?("#{keys_dir}/#{f}") and f != '.' and f != '..' and
-        (File.exists? "#{keys_dir}/#{f}/id_rsa" or File.exists? "#{keys_dir}/#{f}/id_dsa")
+    if File.directory?("#{keys_dir}/#{f}") and f != '.' and f != '..'
+
+      # Check id_rsa and id_dsa. prepend with a "*" if ~/.ssh/id_rsa or ~/.ssh/id_dsa is equal to the one we are listing
+      ['id_rsa', 'id_dsa'].each do |id|
+        if File.exists? "#{keys_dir}/#{f}/#{id}"
+          if File.exists?("#{DOT_SSH_DIR}/#{id}") and
+            FileUtils.compare_file("#{keys_dir}/#{f}/#{id}", "#{DOT_SSH_DIR}/#{id}")
+            print '* '
+          else
+            print '  '
+          end
+          puts f
+          break
+        end
+      end
+    end
   end
 end
 
